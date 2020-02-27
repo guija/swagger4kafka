@@ -1,8 +1,8 @@
 import io.github.stavshamir.swagger4kafka.example.dtos.ExamplePayloadDto
-import junit.framework.TestCase.assertEquals
+import junit.framework.TestCase.*
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.ClassRule
 import org.junit.Test
-import org.springframework.core.ParameterizedTypeReference
 import org.springframework.web.client.RestTemplate
 import org.testcontainers.containers.DockerComposeContainer
 import java.io.File
@@ -20,8 +20,6 @@ class ApiIntegrationTests {
         val environment: DockerComposeContainer<Nothing> = DockerComposeContainer<Nothing>(File("docker-compose.yml"))
                 .withExposedService(APP_NAME, APP_PORT)
     }
-
-    inline fun <reified T : Any> typeRef(): ParameterizedTypeReference<T> = object : ParameterizedTypeReference<T>() {}
 
     private fun baseUrl(): String {
         val host = environment.getServiceHost(APP_NAME, APP_PORT)
@@ -45,9 +43,9 @@ class ApiIntegrationTests {
 
     @Test
     fun `endpoints endpoint should return the correct response`() {
-        val infoEndpoint = "/kafka-api/endpoints"
+        val endpointsEndpoint = "/kafka-api/endpoints"
 
-        val actual = restTemplate.getForObject(baseUrl() + infoEndpoint, Array<KafkaEndpoint>::class.java)?.toList()
+        val actual = restTemplate.getForObject(baseUrl() + endpointsEndpoint, Array<KafkaEndpoint>::class.java)?.toList()
         val expected = listOf(
                 KafkaEndpoint(
                         topic = "example-topic",
@@ -58,6 +56,36 @@ class ApiIntegrationTests {
         )
 
         assertEquals(expected, actual)
+    }
+
+    data class Payload(val className: String, val `object`: Map<String, Any>)
+    data class ValidationMessage(val valid: Boolean, val message: String)
+
+    @Test
+    fun `validate should return a non-valid response for a non-valid payload`() {
+        val validateEndpoint = "/kafka-api/validate"
+
+        val payload = Payload(className = ExamplePayloadDto::class.java.name, `object` = mapOf("wrongFieldName" to "string"))
+        val actual = restTemplate.postForObject(baseUrl() + validateEndpoint, payload, ValidationMessage::class.java)
+
+        assertThat(actual).isNotNull()
+        assertThat(actual?.valid).isFalse()
+        assertThat(actual?.message).isNotEmpty()
+    }
+
+    @Test
+    fun `validate should return a valid response for valid payloads`() {
+        val validateEndpoint = "/kafka-api/validate"
+
+        val payload = Payload(
+                className = ExamplePayloadDto::class.java.name,
+                `object` = mapOf("someString" to "string", "someLong" to 0, "someEnum" to "FOO1")
+        )
+        val actual = restTemplate.postForObject(baseUrl() + validateEndpoint, payload, ValidationMessage::class.java)
+
+        assertThat(actual).isNotNull()
+        assertThat(actual?.valid).isTrue()
+        assertThat(actual?.message).isEmpty()
     }
 
 }
