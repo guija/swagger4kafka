@@ -8,5 +8,16 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Channel {
+
     private Operation publish;
+    private Operation subscribe;
+
+    public static Channel ofSubscribe(Operation subscribe) {
+        return new Channel(null, subscribe);
+    }
+
+    public static Channel ofPublish(Operation publish) {
+        return new Channel(publish, null);
+    }
+
 }
