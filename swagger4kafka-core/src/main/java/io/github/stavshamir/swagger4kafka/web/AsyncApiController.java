@@ -1,7 +1,8 @@
 package io.github.stavshamir.swagger4kafka.web;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import io.github.stavshamir.swagger4kafka.services.SpecificationService;
+import io.github.stavshamir.swagger4kafka.services.AsyncApiDocService;
+import io.github.stavshamir.swagger4kafka.types.AsyncApiDoc;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -16,16 +17,16 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/async-api")
 public class AsyncApiController {
 
-    private final SpecificationService specificationService;
+    private final AsyncApiDocService asyncApiDocService;
 
     @GetMapping(value = "/doc", produces = MediaType.APPLICATION_JSON_VALUE)
-    public String doc() throws JsonProcessingException {
-        return specificationService.getDocAsJson();
+    public AsyncApiDoc doc() {
+        return asyncApiDocService.getDoc();
     }
 
     @GetMapping(value = "/doc.yaml")
     public String docAsYaml() throws JsonProcessingException {
-        return specificationService.getSpecificationAsYaml();
+        return asyncApiDocService.getDocAsYaml();
     }
 
 }
