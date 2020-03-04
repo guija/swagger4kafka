@@ -1,0 +1,29 @@
+---
+asyncapi: "2.0.0"
+info:
+  title: "Example Spec"
+  version: "1.0.0"
+  description: "An example of the AsyncApi specification"
+servers:
+  broker_kafka_9092:
+    url: "kafka:9092"
+    protocol: "kafka"
+channels:
+  example-topic:
+    subscribe:
+      bindings:
+        kafka:
+          groupId: "example-group-id"
+      message:
+        payload:
+          type: "object"
+          properties:
+            s:
+              type: "string"
+            b:
+              type: "boolean"
+        name: "io.github.stavshamir.swagger4kafka.services.AsyncApiDocServiceTest$Foo"
+        title: "Foo"
+        examples:
+        - s: "string"
+          b: true
