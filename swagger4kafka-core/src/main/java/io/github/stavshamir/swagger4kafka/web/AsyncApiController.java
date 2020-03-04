@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 @CrossOrigin
 @RestController
-@RequiredArgsConstructor(onConstructor = @__(@Autowired))
 @RequestMapping("/async-api")
+@RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class AsyncApiController {
 
     private final AsyncApiDocService asyncApiDocService;
@@ -25,7 +25,7 @@ public class AsyncApiController {
     }
 
     @GetMapping(value = "/doc.yaml")
-    public String docAsYaml() throws JsonProcessingException {
+    public String docAsYaml() {
         return asyncApiDocService.getDocAsYaml();
     }
 
