@@ -34,6 +34,6 @@ public class Server {
     }
 
     private static String buildName(String url) {
-        return "kafka_" + url;
+        return "broker_" + url.replace(":", "_");
     }
 }
