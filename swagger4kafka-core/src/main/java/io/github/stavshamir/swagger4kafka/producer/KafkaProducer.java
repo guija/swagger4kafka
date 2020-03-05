@@ -1,10 +1,13 @@
 package io.github.stavshamir.swagger4kafka.producer;
 
 import com.google.common.collect.ImmutableMap;
-import io.github.stavshamir.swagger4kafka.configuration.Docket;
+import io.github.stavshamir.swagger4kafka.configuration.KafkaProtocolConfiguration;
+import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.serializer.JsonSerializer;
@@ -14,21 +17,22 @@ import java.util.Map;
 import java.util.Optional;
 
 @Component
+@ConditionalOnProperty(prefix = "async-api", name = "protocols.kafka")
 public class KafkaProducer {
 
     private final KafkaTemplate<String, Map<String, Object>> kafkaTemplate;
 
     @Autowired
-    public KafkaProducer(Docket docket) {
-        Map<String, Object> config = config(docket);
+    public KafkaProducer(KafkaProtocolConfiguration configuration) {
+        Map<String, Object> config = config(configuration);
 
         DefaultKafkaProducerFactory<String, Map<String, Object>> factory = new DefaultKafkaProducerFactory<>(config);
         this.kafkaTemplate = new KafkaTemplate<>(factory);
     }
 
-    private Map<String, Object> config(Docket docket) {
-        return Optional.ofNullable(docket.getProducerConfiguration())
-                .orElseGet(() -> defaultConfig(docket.getBootstrapServers()));
+    private Map<String, Object> config(KafkaProtocolConfiguration configuration) {
+        return Optional.ofNullable(configuration.getProducerConfiguration())
+                .orElseGet(() -> defaultConfig(configuration.getBootstrapServers()));
     }
 
     private Map<String, Object> defaultConfig(String bootstrapServers) {

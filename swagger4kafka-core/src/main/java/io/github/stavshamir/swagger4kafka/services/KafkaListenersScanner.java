@@ -1,8 +1,17 @@
 package io.github.stavshamir.swagger4kafka.services;
 
-import io.github.stavshamir.swagger4kafka.dtos.KafkaEndpoint;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import io.github.stavshamir.swagger4kafka.configuration.KafkaProtocolConfiguration;
+import io.github.stavshamir.swagger4kafka.types.Channel;
+import io.github.stavshamir.swagger4kafka.types.KafkaOperationBindings;
+import io.github.stavshamir.swagger4kafka.types.Message;
+import io.github.stavshamir.swagger4kafka.types.Operation;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.EmbeddedValueResolverAware;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
@@ -11,42 +20,69 @@ import org.springframework.util.StringValueResolver;
 import java.lang.reflect.Method;
 import java.util.*;
 
-import static java.util.stream.Collectors.toSet;
+import static java.util.stream.Collectors.toMap;
 
 @Slf4j
 @Component
-public class KafkaListenersScanner implements EmbeddedValueResolverAware {
+@RequiredArgsConstructor(onConstructor = @__(@Autowired))
+@ConditionalOnProperty(prefix = "async-api", name = "protocols.kafka") // TODO meta-annotation
+public class KafkaListenersScanner implements EmbeddedValueResolverAware, ChannelsScanner {
 
     private StringValueResolver resolver;
     private final ModelsService modelsService;
-
-    @Autowired
-    public KafkaListenersScanner(ModelsService modelsService) {
-        this.modelsService = modelsService;
-    }
+    private final ComponentScanner componentScanner;
+    private final KafkaProtocolConfiguration kafkaProtocolConfiguration;
 
     @Override
-    public void setEmbeddedValueResolver(StringValueResolver resolver) {
+    public void setEmbeddedValueResolver(@NotNull StringValueResolver resolver) {
         this.resolver = resolver;
     }
 
-    Set<KafkaEndpoint> getKafkaEndpointsFromClass(Class<?> type) {
+    @Override
+    public Map<String, Channel> getChannels() {
+        return componentScanner.getComponentClasses(kafkaProtocolConfiguration.getBasePackage()).stream()
+                .map(this::getChannels)
+                .map(Map::entrySet)
+                .flatMap(Collection::stream)
+                .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+    private Map<String, Channel> getChannels(Class<?> type) {
         log.debug("Scanning {}", type.getName());
 
         return Arrays.stream(type.getDeclaredMethods())
                 .filter(method -> method.isAnnotationPresent(KafkaListener.class))
-                .map(this::createKafkaEndpoints)
+                .map(this::kafkaListenerToChannels)
+                .map(Map::entrySet)
                 .flatMap(Collection::stream)
-                .collect(toSet());
+                .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
-    private Set<KafkaEndpoint> createKafkaEndpoints(Method method) {
+    private Map<String, Channel> kafkaListenerToChannels(Method method) {
         KafkaListener annotation = Optional.of(method.getAnnotation(KafkaListener.class))
                 .orElseThrow(() -> new IllegalArgumentException("Method must be annotated with @KafkaListener"));
 
         return getTopics(annotation).stream()
-                .map(topic -> topicToEndpoint(topic, method))
-                .collect(toSet());
+                .collect(toMap(topic -> topic, topic -> buildChannel(method)));
+    }
+
+    private Channel buildChannel(Method method) {
+        Class<?> payloadType = getPayloadType(method);
+        String modelName = modelsService.register(payloadType);
+
+        Message message = Message.builder()
+                .name(payloadType.getName())
+                .title(modelName)
+                .payload(modelsService.getDefinitions().get(modelName))
+                .examples(ImmutableList.of(modelsService.getExample(modelName)))
+                .build();
+
+        Operation operation = Operation.builder()
+                .bindings(ImmutableMap.of("kafka", new KafkaOperationBindings()))
+                .message(message)
+                .build();
+
+        return Channel.ofSubscribe(operation);
     }
 
     private List<String> getTopics(KafkaListener kafkaListener) {
@@ -58,18 +94,6 @@ public class KafkaListenersScanner implements EmbeddedValueResolverAware {
         }
 
         return Arrays.asList(topics);
-    }
-
-    private KafkaEndpoint topicToEndpoint(String topic, Method method) {
-        Class<?> payloadType = getPayloadType(method);
-        String modelName = modelsService.register(payloadType);
-
-        return KafkaEndpoint.builder()
-                .topic(topic)
-                .payloadClassName(payloadType.getName())
-                .payloadModelName(modelName)
-                .payloadExample(modelsService.getExample(modelName))
-                .build();
     }
 
     private static Class<?> getPayloadType(Method method) {
