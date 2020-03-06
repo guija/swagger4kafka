@@ -2,12 +2,9 @@ package io.github.stavshamir.swagger4kafka.producer;
 
 import com.google.common.collect.ImmutableMap;
 import io.github.stavshamir.swagger4kafka.configuration.KafkaProtocolConfiguration;
-import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.serializer.JsonSerializer;
@@ -17,7 +14,6 @@ import java.util.Map;
 import java.util.Optional;
 
 @Component
-@ConditionalOnProperty(prefix = "async-api", name = "protocols.kafka")
 public class KafkaProducer {
 
     private final KafkaTemplate<String, Map<String, Object>> kafkaTemplate;

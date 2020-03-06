@@ -18,7 +18,7 @@ import javax.annotation.PostConstruct;
 public class AsyncApiDocService {
 
     private final AsyncApiDoc userAsyncApiDoc;
-    private final ChannelsService channelsService;
+    private final KafkaListenersScanner kafkaListenersScanner;
 
     private final ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());
 
@@ -40,7 +40,7 @@ public class AsyncApiDocService {
         return AsyncApiDoc.builder()
                 .info(getInfo())
                 .servers(userAsyncApiDoc.getServers())
-                .channels(channelsService.getChannels())
+                .channels(kafkaListenersScanner.getChannels())
                 .build();
     }
 

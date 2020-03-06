@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.EmbeddedValueResolverAware;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
@@ -25,8 +24,7 @@ import static java.util.stream.Collectors.toMap;
 @Slf4j
 @Component
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
-@ConditionalOnProperty(prefix = "async-api", name = "protocols.kafka") // TODO meta-annotation
-public class KafkaListenersScanner implements EmbeddedValueResolverAware, ChannelsScanner {
+public class KafkaListenersScanner implements EmbeddedValueResolverAware {
 
     private StringValueResolver resolver;
     private final ModelsService modelsService;
@@ -38,7 +36,6 @@ public class KafkaListenersScanner implements EmbeddedValueResolverAware, Channe
         this.resolver = resolver;
     }
 
-    @Override
     public Map<String, Channel> getChannels() {
         return componentScanner.getComponentClasses(kafkaProtocolConfiguration.getBasePackage()).stream()
                 .map(this::getChannels)
