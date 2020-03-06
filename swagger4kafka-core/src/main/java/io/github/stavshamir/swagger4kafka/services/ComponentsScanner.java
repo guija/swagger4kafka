@@ -14,7 +14,7 @@ import static java.util.stream.Collectors.toSet;
 
 @Slf4j
 @Service
-public class ComponentScanner {
+public class ComponentsScanner {
 
     public Set<Class<?>> getComponentClasses(String basePackage) {
         return getCandidateComponents(basePackage).stream()
