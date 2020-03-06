@@ -1,5 +1,6 @@
 package io.github.stavshamir.swagger4kafka.services
 
+import io.github.stavshamir.swagger4kafka.configuration.KafkaProtocolConfiguration
 import io.github.stavshamir.swagger4kafka.types.Channel
 import io.github.stavshamir.swagger4kafka.types.KafkaOperationBindings
 import io.github.stavshamir.swagger4kafka.types.Message
@@ -8,22 +9,32 @@ import junit.framework.TestCase.assertEquals
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.test.context.TestConfiguration
+import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Import
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 
+private const val BASE_PACKAGE = "base.package"
 private const val TOPIC = "test-topic"
 
 @RunWith(SpringRunner::class)
 @ContextConfiguration(classes = [KafkaListenersScanner::class, ModelsService::class])
+@Import(KafkaListenersScannerTestConfiguration::class)
 @TestPropertySource(properties = ["kafka.topics.test=$TOPIC"])
 class KafkaListenersScannerTest {
 
     @Autowired
     private lateinit var kafkaListenersScanner: KafkaListenersScanner
+
+    @MockBean
+    private lateinit var componentsScanner: ComponentsScanner
 
     private val modelsService = ModelsService()
 
@@ -49,8 +60,11 @@ class KafkaListenersScannerTest {
     @Test
     fun `given no annotated methods, getChannels should return an empty map`() {
         // Given a class without methods annotated with KafkaListener
+        Mockito.`when`(componentsScanner.getComponentClasses(BASE_PACKAGE))
+                .thenReturn(setOf(ClassWithoutKafkaListenerAnnotations::class.java))
+
         // When getChannels is called
-        val channels = kafkaListenersScanner.getChannels(ClassWithoutKafkaListenerAnnotations::class.java)
+        val channels = kafkaListenersScanner.channels
 
         // Then the returned collection is empty
         assertThat(channels).isEmpty()
@@ -60,31 +74,34 @@ class KafkaListenersScannerTest {
     fun `given methods annotated with @KafkaListener with hardcoded topic, getChannels should return a matching channel`() {
         // Given a class with methods annotated with KafkaListener, whose topics attribute is hard coded
         // When getChannels is called
-        val actualChannels = kafkaListenersScanner.getChannels(ClassWithKafkaListenerAnnotationsHardCodedTopics::class.java)
+        Mockito.`when`(componentsScanner.getComponentClasses(BASE_PACKAGE))
+                .thenReturn(setOf(ClassWithKafkaListenerAnnotationsHardCodedTopics::class.java))
 
         // Then the returned collection contains the methods' details
         val operation = buildOperation(SimpleFoo::class.java)
         val expectedChannels = mapOf(TOPIC to Channel.ofSubscribe(operation))
-        assertEquals(expectedChannels, actualChannels)
+        assertEquals(expectedChannels, kafkaListenersScanner.channels)
     }
 
     @Test
     fun `given methods annotated with @KafkaListener with an embedded topic, getChannels should return a matching channel`() {
         // Given a class with methods annotated with KafkaListener, whose topics attribute is an embedded value
         // When getChannels is called
-        val actualChannels = kafkaListenersScanner.getChannels(ClassWithKafkaListenerAnnotationsEmbeddedValueTopic::class.java)
+        Mockito.`when`(componentsScanner.getComponentClasses(BASE_PACKAGE))
+                .thenReturn(setOf(ClassWithKafkaListenerAnnotationsEmbeddedValueTopic::class.java))
 
         // Then the returned collection contains the methods' details
         val operation = buildOperation(SimpleFoo::class.java)
         val expectedChannels = mapOf(TOPIC to Channel.ofSubscribe(operation))
-        assertEquals(expectedChannels, actualChannels)
+        assertEquals(expectedChannels, kafkaListenersScanner.channels)
     }
 
     @Test
     fun `given methods annotated with @KafkaListener with multiple topics, getChannels should return matching channels`() {
         // Given a class with methods annotated with KafkaListener, whose topics contain multiple topics
         // When getChannels is called
-        val actualChannels = kafkaListenersScanner.getChannels(ClassWithKafkaListenerAnnotationsMultipleTopics::class.java)
+        Mockito.`when`(componentsScanner.getComponentClasses(BASE_PACKAGE))
+                .thenReturn(setOf(ClassWithKafkaListenerAnnotationsMultipleTopics::class.java))
 
         // Then the returned collection contains the methods' details
         val operation = buildOperation(SimpleFoo::class.java)
@@ -92,7 +109,7 @@ class KafkaListenersScannerTest {
                 TOPIC + "1" to Channel.ofSubscribe(operation),
                 TOPIC + "2" to Channel.ofSubscribe(operation)
         )
-        assertEquals(expectedChannels, actualChannels)
+        assertEquals(expectedChannels, kafkaListenersScanner.channels)
     }
 
     private class ClassWithoutKafkaListenerAnnotations {
@@ -129,4 +146,13 @@ class KafkaListenersScannerTest {
         val b = false
     }
 
+}
+
+@TestConfiguration
+open class KafkaListenersScannerTestConfiguration {
+
+    @Bean
+    open fun kafkaProtocolConfiguration(): KafkaProtocolConfiguration = KafkaProtocolConfiguration.builder()
+            .basePackage(BASE_PACKAGE)
+            .build()
 }

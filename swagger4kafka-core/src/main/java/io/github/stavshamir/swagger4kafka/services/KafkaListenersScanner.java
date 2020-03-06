@@ -28,7 +28,7 @@ public class KafkaListenersScanner implements EmbeddedValueResolverAware {
 
     private StringValueResolver resolver;
     private final ModelsService modelsService;
-    private final ComponentScanner componentScanner;
+    private final ComponentsScanner componentsScanner;
     private final KafkaProtocolConfiguration kafkaProtocolConfiguration;
 
     @Override
@@ -37,7 +37,7 @@ public class KafkaListenersScanner implements EmbeddedValueResolverAware {
     }
 
     public Map<String, Channel> getChannels() {
-        return componentScanner.getComponentClasses(kafkaProtocolConfiguration.getBasePackage()).stream()
+        return componentsScanner.getComponentClasses(kafkaProtocolConfiguration.getBasePackage()).stream()
                 .map(this::getChannels)
                 .map(Map::entrySet)
                 .flatMap(Collection::stream)
