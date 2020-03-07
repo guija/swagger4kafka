@@ -1,6 +1,5 @@
 package io.github.stavshamir.swagger4kafka.web;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.github.stavshamir.swagger4kafka.services.AsyncApiDocService;
 import io.github.stavshamir.swagger4kafka.types.AsyncApiDoc;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +23,7 @@ public class AsyncApiController {
         return asyncApiDocService.getDoc();
     }
 
-    @GetMapping(value = "/doc.yaml")
+    @GetMapping(value = "/doc.yaml", produces = MediaType.TEXT_PLAIN_VALUE)
     public String docAsYaml() {
         return asyncApiDocService.getDocAsYaml();
     }
