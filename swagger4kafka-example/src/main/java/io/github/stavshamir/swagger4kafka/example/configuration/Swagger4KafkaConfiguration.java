@@ -1,8 +1,11 @@
 package io.github.stavshamir.swagger4kafka.example.configuration;
 
 import com.google.common.collect.ImmutableMap;
-import io.github.stavshamir.swagger4kafka.configuration.Docket;
 import io.github.stavshamir.swagger4kafka.configuration.EnableSwagger4Kafka;
+import io.github.stavshamir.swagger4kafka.configuration.KafkaProtocolConfiguration;
+import io.github.stavshamir.swagger4kafka.types.AsyncApiDoc;
+import io.github.stavshamir.swagger4kafka.types.Info;
+import io.github.stavshamir.swagger4kafka.types.Server;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,11 +26,26 @@ public class Swagger4KafkaConfiguration {
     }
 
     @Bean
-    public Docket docket() {
-        return Docket.builder()
-                .serviceName("swagger4kafka Example Project")
+    public AsyncApiDoc userAsyncApiDoc() {
+        Info info = Info.builder()
+                .title("Async API For Spring Boot Example Project")
+                .description("An example of the AsyncApi specification")
+                .version("1.0.0")
+                .build();
+
+        return AsyncApiDoc.builder()
+                .info(info)
+                .servers(Server.kafkaBootstrapServers(BOOTSTRAP_SERVERS))
+                .build();
+    }
+
+
+    @Bean
+    public KafkaProtocolConfiguration kafkaProtocolConfiguration() {
+        return KafkaProtocolConfiguration.builder()
                 .basePackage("io.github.stavshamir.swagger4kafka.example.consumers")
                 .producerConfiguration(producerConfiguration())
+                .bootstrapServers(BOOTSTRAP_SERVERS)
                 .build();
     }
 
