@@ -6,6 +6,7 @@ plugins {
   id 'maven-publish'
 }
 
+sourceCompatibility = '1.8'
 version = rootProject.uiVersion
 
 node {
