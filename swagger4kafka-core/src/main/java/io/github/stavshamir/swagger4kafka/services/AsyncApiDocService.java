@@ -29,7 +29,7 @@ public class AsyncApiDocService {
     private String docAsYaml;
 
     @PostConstruct
-    private void postConstruct() throws JsonProcessingException {
+    public void postConstruct() throws JsonProcessingException {
         yamlMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
         doc = buildDoc();
