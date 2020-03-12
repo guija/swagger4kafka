@@ -3,10 +3,7 @@ package io.github.stavshamir.swagger4kafka.services;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import io.github.stavshamir.swagger4kafka.configuration.KafkaProtocolConfiguration;
-import io.github.stavshamir.swagger4kafka.types.Channel;
-import io.github.stavshamir.swagger4kafka.types.KafkaOperationBindings;
-import io.github.stavshamir.swagger4kafka.types.Message;
-import io.github.stavshamir.swagger4kafka.types.Operation;
+import io.github.stavshamir.swagger4kafka.types.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -70,7 +67,7 @@ public class KafkaListenersScanner implements EmbeddedValueResolverAware {
         Message message = Message.builder()
                 .name(payloadType.getName())
                 .title(modelName)
-                .payload(modelsService.getDefinitions().get(modelName))
+                .payload(PayloadRef.fromModelName(modelName))
                 .examples(ImmutableList.of(modelsService.getExample(modelName)))
                 .build();
 

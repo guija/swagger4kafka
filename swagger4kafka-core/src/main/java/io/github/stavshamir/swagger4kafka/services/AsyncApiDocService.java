@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.github.stavshamir.swagger4kafka.types.AsyncApiDoc;
+import io.github.stavshamir.swagger4kafka.types.Components;
 import io.github.stavshamir.swagger4kafka.types.Info;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,7 @@ public class AsyncApiDocService {
 
     private final AsyncApiDoc userAsyncApiDoc;
     private final KafkaListenersScanner kafkaListenersScanner;
+    private final ModelsService modelsService;
 
     private final ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());
 
@@ -41,6 +43,13 @@ public class AsyncApiDocService {
                 .info(getInfo())
                 .servers(userAsyncApiDoc.getServers())
                 .channels(kafkaListenersScanner.getChannels())
+                .components(buildComponents())
+                .build();
+    }
+
+    private Components buildComponents() {
+        return Components.builder()
+                .schemas(modelsService.getDefinitions())
                 .build();
     }
 

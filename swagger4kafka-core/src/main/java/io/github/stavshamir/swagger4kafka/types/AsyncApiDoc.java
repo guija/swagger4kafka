@@ -25,4 +25,6 @@ public class AsyncApiDoc {
     @Builder.Default
     private Map<String, Channel> channels = new HashMap<>();
 
+    private Components components;
+
 }

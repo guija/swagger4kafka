@@ -1,10 +1,7 @@
 package io.github.stavshamir.swagger4kafka.services
 
 import io.github.stavshamir.swagger4kafka.configuration.KafkaProtocolConfiguration
-import io.github.stavshamir.swagger4kafka.types.Channel
-import io.github.stavshamir.swagger4kafka.types.KafkaOperationBindings
-import io.github.stavshamir.swagger4kafka.types.Message
-import io.github.stavshamir.swagger4kafka.types.Operation
+import io.github.stavshamir.swagger4kafka.types.*
 import junit.framework.TestCase.assertEquals
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
@@ -47,7 +44,7 @@ class KafkaListenersScannerTest {
         val message = Message.builder()
                 .name(type.name)
                 .title(type.simpleName)
-                .payload(modelsService.definitions[modelName])
+                .payload(PayloadRef.fromModelName(modelName))
                 .examples(listOf(modelsService.getExample(modelName)))
                 .build()
 

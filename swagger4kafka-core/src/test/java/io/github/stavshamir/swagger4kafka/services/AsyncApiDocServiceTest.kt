@@ -18,7 +18,7 @@ import java.io.File
 
 @RunWith(SpringRunner::class)
 @Import(AsyncApiDocServiceTestConfiguration::class)
-@ContextConfiguration(classes = [AsyncApiDocService::class])
+@ContextConfiguration(classes = [AsyncApiDocService::class, ModelsService::class])
 class AsyncApiDocServiceTest {
 
     @Autowired
@@ -27,10 +27,13 @@ class AsyncApiDocServiceTest {
     @MockBean
     private lateinit var kafkaListenersScanner: KafkaListenersScanner
 
+    @Autowired
+    private lateinit var modelsService: ModelsService
+
     @Test
     fun `docsAsYaml should return the correct async api doc as yaml`() {
         Mockito.`when`(kafkaListenersScanner.channels)
-                .thenReturn(expectedChannels())
+                .thenReturn(channels())
 
         asyncApiService.postConstruct()
 
@@ -38,15 +41,13 @@ class AsyncApiDocServiceTest {
         assertEquals(expected, asyncApiService.docAsYaml)
     }
 
-    private fun expectedChannels(): Map<String, Channel> {
-        val modelsService = ModelsService()
-
+    private fun channels(): Map<String, Channel> {
         val modelName = modelsService.register(Foo::class.java)
 
         val message = Message.builder()
                 .name(Foo::class.java.name)
                 .title(Foo::class.java.simpleName)
-                .payload(modelsService.definitions[modelName])
+                .payload(PayloadRef.fromModelName(modelName))
                 .examples(listOf(modelsService.getExample(modelName)))
                 .build()
 

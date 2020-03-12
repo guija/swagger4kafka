@@ -16,14 +16,18 @@ channels:
           groupId: "example-group-id"
       message:
         payload:
-          type: "object"
-          properties:
-            s:
-              type: "string"
-            b:
-              type: "boolean"
+          $ref: "#/components/schemas/Foo"
         name: "io.github.stavshamir.swagger4kafka.services.AsyncApiDocServiceTest$Foo"
         title: "Foo"
         examples:
         - s: "string"
           b: true
+components:
+  schemas:
+    Foo:
+      type: "object"
+      properties:
+        s:
+          type: "string"
+        b:
+          type: "boolean"
