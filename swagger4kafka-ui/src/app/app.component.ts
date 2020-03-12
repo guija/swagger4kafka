@@ -1,22 +1,22 @@
 import {Component, OnInit} from '@angular/core';
-import {InfoService} from './services/info.service';
-import {Info} from './shared/info';
+import {AsyncApiDocService} from './services/doc.service';
+import {AsyncApiDoc} from './shared/async-api/doc.model';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
-  providers: [InfoService]
+  providers: [AsyncApiDocService]
 })
 export class AppComponent implements OnInit {
-  info: Info;
+  doc: AsyncApiDoc;
 
-  constructor(private infoService: InfoService) {}
+  constructor(private asyncApiDocService: AsyncApiDocService) {}
 
   ngOnInit(): void {
-    this.infoService
-      .getInfo()
-      .subscribe(info => this.info = info);
+    this.asyncApiDocService
+      .getAsyncApiDoc()
+      .subscribe(doc => this.doc = doc);
   }
 
 }

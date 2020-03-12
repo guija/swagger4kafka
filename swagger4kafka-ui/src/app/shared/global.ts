@@ -1,2 +1,2 @@
-const BASE_URL = 'kafka-api';
+const BASE_URL = 'async-api';
 export { BASE_URL };

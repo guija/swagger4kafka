@@ -1,8 +1,10 @@
 <div class="header">
-  <h3>swagger4kafka</h3>
+  <h4>Async API for Spring Boot</h4>
 </div>
 <div class="container">
-  <h1 *ngIf="info">{{ info.serviceName }}</h1>
+  <h2>{{ doc.info.title }} {{ doc.info.version }}</h2>
+  <p>{{ doc.info.description }}</p>
+
   <app-topics></app-topics>
   <br>
   <app-models></app-models>
