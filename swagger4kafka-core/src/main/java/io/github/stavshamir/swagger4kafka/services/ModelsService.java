@@ -9,16 +9,14 @@ import io.swagger.inflector.examples.ExampleBuilder;
 import io.swagger.inflector.examples.models.Example;
 import io.swagger.inflector.processors.JsonNodeExampleSerializer;
 import io.swagger.models.Model;
+import io.swagger.models.properties.RefProperty;
 import io.swagger.util.Json;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 
 @Slf4j
@@ -42,9 +40,26 @@ public class ModelsService {
         log.debug("Registering model for {}", type.getSimpleName());
 
         Map<String, Model> models = converter.readAll(type);
+        fixOriginalRefBug(models.values());
+
         this.definitions.putAll(models);
 
         return getModelName(type);
+    }
+
+    private void fixOriginalRefBug(Collection<Model> models) {
+        /*
+         * Replace RefProperty with an extended class which returns a null originalRef to comply with the open api specs.
+         * See https://github.com/swagger-api/swagger-core/issues/2944
+         * Also, replace definitions in $ref to components/schemas to comply with async api spec.
+         */
+        models.forEach(model -> model.getProperties().replaceAll((k, v) -> {
+            if (v instanceof RefProperty) {
+                return new FixedRefProperty(((RefProperty) v).getSimpleRef());
+            }
+
+            return v;
+        }));
     }
 
     public Map<String, Object> getExample(String modelName) {
