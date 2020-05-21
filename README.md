@@ -116,3 +116,10 @@ private Map<String, Object> producerConfiguration() {
 
 ### Example Project
  An example project can be found [here](https://github.com/stavshamir/swagger4kafka/tree/master/swagger4kafka-example).
+
+### IDE Setup
+
+#### IntelliJ
+
+- Open folder in IntelliJ. Gradle will be configured automatically.
+- For running unit tests possible problem: "Variable log not found". Lombok Extension has to be installed and annotation processing has to be activated (`Preferences > Build, Execution, Deployment > Compiler > Annotation Processors`). Restart IntelliJ.
